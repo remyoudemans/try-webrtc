@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
 import Peer from 'simple-peer';
 
@@ -8,15 +8,19 @@ export default function Home() {
   const router = useRouter();
   const peerSignalFromQuery = router.query.peerSignal;
   const [signal, setSignal] = useState();
+  const [friendMessage, setFriendMessage] = useState('');
+  const [yourMessage, setYourMessage] = useState('');
+
+  const peerRef = useRef();
 
   useEffect(() => {
     if (!peerSignalFromQuery) {
       return;
     }
 
-    const peer = new Peer({ trickle: false });
+    peerRef.current = new Peer({ trickle: false });
 
-    peer.on('signal', data => {
+    peerRef.current.on('signal', data => {
       const stringSignal = JSON.stringify(data);
       setSignal(stringSignal);
       navigator.permissions.query({name: "clipboard-write"}).then(result => {
@@ -28,10 +32,10 @@ export default function Home() {
       })
     })
 
-    peer.signal(JSON.parse(peerSignalFromQuery));
+    peerRef.current.signal(JSON.parse(peerSignalFromQuery));
 
-    peer.on('data', data => {
-      console.log('received data:', data.toString());
+    peerRef.current.on('data', data => {
+      setFriendMessage(data.toString());
     });
   }, [peerSignalFromQuery, setSignal]);
 
@@ -44,6 +48,12 @@ export default function Home() {
 
       <main className={styles.main}>
         {signal && <p>Your signal is <code>{signal}</code></p>}
+        {friendMessage && <p>Your friend is saying: <blockquote>{friendMessage}</blockquote></p>}
+        <p>Once connected, try typing in here:</p>
+          <input type='text' value={yourMessage} onChange={e => {
+            setYourMessage(e.currentTarget.value)
+            peerRef.current.send(e.currentTarget.value)
+          }}/>
       </main>
 
       <footer className={styles.footer}>

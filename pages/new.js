@@ -7,6 +7,7 @@ export default function Home() {
   const [signal, setSignal] = useState();
   const [peerSignal, setPeerSignal] = useState('');
   const [sharedMessage, setSharedMessage] = useState('');
+  const [friendMessage, setFriendMessage] = useState('');
 
   const peerRef = useRef();
 
@@ -21,7 +22,10 @@ export default function Home() {
 
     peerRef.current.on('connect', () => {
       console.log('connected!')
-      peerRef.current.send('hello');
+    })
+
+    peerRef.current.on('data', data => {
+      setFriendMessage(data.toString());
     })
   }, [])
 
@@ -33,7 +37,7 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        {signal && <p>Go to <a href={`/${encodeURIComponent(signal)}`}>peer</a></p>}
+        {signal && <p>Go to <a href={`http://localhost:3000/${encodeURIComponent(signal)}`}>peer</a></p>}
           <form onSubmit={e => {
             e.preventDefault();
             peerRef.current.signal(JSON.parse(peerSignal));
@@ -48,12 +52,13 @@ export default function Home() {
             </label>
             <button type="submit">Connect</button>
           </form>
+        {friendMessage && <p>Your friend is saying: <blockquote>{friendMessage}</blockquote></p>}
 
-            <p>Once connected, try typing in here:</p>
-              <input type='text' value={sharedMessage} onChange={e => {
-                setSharedMessage(e.currentTarget.value)
-                peerRef.current.send(e.currentTarget.value)
-              }}/>
+          <p>Once connected, try typing in here:</p>
+            <input type='text' value={sharedMessage} onChange={e => {
+              setSharedMessage(e.currentTarget.value)
+              peerRef.current.send(e.currentTarget.value)
+            }}/>
       </main>
 
       <footer className={styles.footer}>
