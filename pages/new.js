@@ -11,6 +11,8 @@ export default function Home() {
 
   const peerRef = useRef();
 
+  const cursorDot = useRef();
+
   useEffect(() => {
     console.log('running effect')
     peerRef.current = new Peer({ initiator: true, trickle: false })
@@ -29,6 +31,13 @@ export default function Home() {
     })
   }, [])
 
+  useEffect(() => {
+    const cursorDotEl = document.getElementById('cursorDot');
+    document.addEventListener('mousemove', e => {
+      cursorDotEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+    });
+  }, [])
+
   return (
     <div className={styles.container}>
       <Head>
@@ -37,6 +46,14 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+        <span id='cursorDot' ref={cursorDot} style={{
+          height: '20px',
+          width: '20px',
+          backgroundColor: 'blue',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        }}/>
         {signal && <p>Go to <a href={`http://localhost:3000/${encodeURIComponent(signal)}`}>peer</a></p>}
           <form onSubmit={e => {
             e.preventDefault();
