@@ -13,6 +13,8 @@ export default function Home() {
 
   const peerRef = useRef();
 
+  const friendsCursor = useRef();
+
   useEffect(() => {
     if (!peerSignalFromQuery) {
       return;
@@ -35,7 +37,16 @@ export default function Home() {
     peerRef.current.signal(JSON.parse(peerSignalFromQuery));
 
     peerRef.current.on('data', data => {
-      setFriendMessage(data.toString());
+      const parsedData = JSON.parse(data.toString());
+
+      if (parsedData.messageType === 'mousemove') {
+        friendsCursor.current.style.transform = `translate(${parsedData.x}px, ${parsedData.y}px)`;
+      }
+
+      if (parsedData.messageType === 'inputText') {
+        setFriendMessage(parsedData.value);
+      }
+      
     });
   }, [peerSignalFromQuery, setSignal]);
 
@@ -47,6 +58,14 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+        <span id='friendsCursor' ref={friendsCursor} style={{
+          height: '20px',
+          width: '20px',
+          backgroundColor: 'blue',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }}/>
         {signal && <p>Your signal is <code>{signal}</code></p>}
         {friendMessage && <p>Your friend is saying: <blockquote>{friendMessage}</blockquote></p>}
         <p>Once connected, try typing in here:</p>

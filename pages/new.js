@@ -8,10 +8,9 @@ export default function Home() {
   const [peerSignal, setPeerSignal] = useState('');
   const [sharedMessage, setSharedMessage] = useState('');
   const [friendMessage, setFriendMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
 
   const peerRef = useRef();
-
-  const cursorDot = useRef();
 
   useEffect(() => {
     console.log('running effect')
@@ -24,6 +23,7 @@ export default function Home() {
 
     peerRef.current.on('connect', () => {
       console.log('connected!')
+      setIsConnected(true);
     })
 
     peerRef.current.on('data', data => {
@@ -32,11 +32,20 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    const cursorDotEl = document.getElementById('cursorDot');
-    document.addEventListener('mousemove', e => {
-      cursorDotEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
-    });
-  }, [])
+    const eventHandler = e => {
+      if (isConnected) {
+        peerRef.current.send(JSON.stringify({
+          messageType: 'mousemove',
+          x: e.clientX,
+          y: e.clientY
+        }));
+      }
+    };
+
+    document.addEventListener('mousemove', eventHandler);
+    
+    return () => document.removeEventListener('mousemove', eventHandler);
+  }, [isConnected])
 
   return (
     <div className={styles.container}>
@@ -46,14 +55,6 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <span id='cursorDot' ref={cursorDot} style={{
-          height: '20px',
-          width: '20px',
-          backgroundColor: 'blue',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-        }}/>
         {signal && <p>Go to <a href={`http://localhost:3000/${encodeURIComponent(signal)}`}>peer</a></p>}
           <form onSubmit={e => {
             e.preventDefault();
@@ -73,8 +74,8 @@ export default function Home() {
 
           <p>Once connected, try typing in here:</p>
             <input type='text' value={sharedMessage} onChange={e => {
-              setSharedMessage(e.currentTarget.value)
-              peerRef.current.send(e.currentTarget.value)
+              setSharedMessage(e.currentTarget.value);
+              peerRef.current.send(JSON.stringify({ messageType: 'inputText', value: e.currentTarget.value }));
             }}/>
       </main>
 
