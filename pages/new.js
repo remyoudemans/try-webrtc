@@ -3,6 +3,8 @@ import {useEffect, useRef, useState} from 'react';
 import styles from '../styles/Home.module.css';
 import Peer from 'simple-peer';
 
+// TODO: refactor the heck out of this so you can easily pass various messages around
+
 export default function Home() {
   const [signal, setSignal] = useState();
   const [peerSignal, setPeerSignal] = useState('');
@@ -11,6 +13,16 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
 
   const peerRef = useRef();
+
+  useEffect(() => {
+    const client = new WebSocket('ws://localhost:8080');
+    client.onopen = () => {
+      client.send(JSON.stringify({ type: 'login', userName: 'Jeff'}));
+    };
+    client.onmessage = ev => {
+      console.log(ev)
+    }
+  }, []);
 
   useEffect(() => {
     console.log('running effect')
