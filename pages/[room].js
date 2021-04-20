@@ -86,7 +86,7 @@ export default function Home() {
 
   return (
     <main>
-      Websockets!
+      Connect with websockets and communicate via WebRTC!
       {!showLoginForm && (
         <p>Your username is: {userName}</p>
       )}
